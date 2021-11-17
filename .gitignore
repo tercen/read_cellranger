@@ -8,6 +8,6 @@ packrat/src
 workspace.R
 *.mtx
 *.csv
-*.tsv
+*.tsva
 barcodes.tsv
 join.R

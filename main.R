@@ -19,7 +19,7 @@ on.exit(unlink(filename))
 if(length(grep(".zip", doc$name)) > 0) {
   tmpdir <- tempfile()
   unzip(filename, exdir = tmpdir)
-  f.names <- list.files(tmpdir, full.names = TRUE)
+  f.names <- list.files(tmpdir, full.names = TRUE, recursive = TRUE)
 } else {
   f.names <- filename
 }
