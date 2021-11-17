@@ -1,5 +1,5 @@
 {
-  "name": "read_cellranger",
+  "name": "read_cellranger_operator",
   "description": "Reads the count info output from Cell Ranger",
   "tags": ["import", "scRNA-seq"]
   "authors": ["tercen"],
