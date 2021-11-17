@@ -1,11 +1,55 @@
 library(tercen)
-library(dplyr, warn.conflicts = FALSE)
+library(dplyr)
 
 ctx = tercenCtx()
 
-ctx %>%
-  select(.y, .ci, .ri) %>% 
-  group_by(.ci, .ri) %>%
-  summarise(mean = mean(.y)) %>%
+if (!any(ctx$cnames == "documentId")) stop("Column factor documentId is required")
+
+# extract files
+df <- ctx$cselect()
+
+docId = df$documentId[1]
+doc = ctx$client$fileService$get(docId)
+filename = tempfile()
+writeBin(ctx$client$fileService$download(docId), filename)
+on.exit(unlink(filename))
+
+# unzip if archive
+if(length(grep(".zip", doc$name)) > 0) {
+  tmpdir <- tempfile()
+  unzip(filename, exdir = tmpdir)
+  f.names <- list.files(tmpdir, full.names = TRUE)
+} else {
+  f.names <- filename
+}
+
+# check matrix, barcode and gene file
+# if(any(!isFCSfile(f.names))) stop("Not all imported files are FCS files.")
+
+# convert them to one matrix file
+percentage = 0.001
+
+matrix_table <- read.delim(file = "matrix.mtx", sep = " ", header = FALSE, skip=2) %>%
+  rename("feature_idx"= V1, "barcode_idx" =V2, "count" =V3)
+
+barcode_table <- read.delim(file = "barcodes.tsv", sep = "\t", header = FALSE) %>% 
+  mutate(row_idx = 1:nrow(.)) %>% 
+  rename(barcode = V1) %>% slice_sample(prop = percentage)
+
+feature_table <- read.delim(file = "genes.tsv", sep = "\t", header = FALSE) %>% 
+  mutate(row_idx = 1:nrow(.)) %>% 
+  rename(feature = V1)
+
+matrix_table <- matrix_table %>%
+  right_join(b, by= c("barcode_idx" = "row_idx"))
+
+matrix_table <- matrix_table %>%
+  left_join(f, by= c("feature_idx" = "row_idx")) %>%
+  rename(gene_name1 = feature, gene_name2 = V2)
+
+matrix_table <- matrix_table %>%
+  select(-ends_with("_idx"))
+
+matrix_table %>%
   ctx$addNamespace() %>%
   ctx$save()

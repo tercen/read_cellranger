@@ -6,4 +6,8 @@
 packrat/lib*/
 packrat/src
 workspace.R
-
+*.mtx
+*.csv
+*.tsv
+barcodes.tsv
+join.R
