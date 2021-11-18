@@ -29,6 +29,10 @@ if(length(grep(".zip", doc$name)) > 0) {
 # convert them to one matrix file
 percentage = as.double(ctx$op.value('percentage'))
 
+print(percentage)
+
+stop("check the percentage")
+
 matrix_table <- read.delim(file = f.names[grepl("matrix.mtx",f.names)], sep = " ", header = FALSE, skip=2) %>%
   rename("feature_idx"= V1, "barcode_idx" =V2, "count" =V3)
 
