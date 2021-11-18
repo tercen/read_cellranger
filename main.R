@@ -29,14 +29,14 @@ if(length(grep(".zip", doc$name)) > 0) {
 # convert them to one matrix file
 percentage = as.double(ctx$op.value('percentage'))
 
-matrix_table <- read.delim(file = f.names[grepl("matrix.mtx",f.names)], sep = " ", header = FALSE, skip=2) %>%
+matrix_table <- read.delim(file = f.names[grepl("matrix",f.names)], sep = " ", header = FALSE, skip=2) %>%
   rename("feature_idx"= V1, "barcode_idx" =V2, "count" =V3)
 
-barcode_table <- read.delim(file = f.names[grepl("barcodes.tsv",f.names)], sep = "\t", header = FALSE) %>% 
+barcode_table <- read.delim(file = f.names[grepl("barcodes",f.names)], sep = "\t", header = FALSE) %>% 
   mutate(row_idx = 1:nrow(.)) %>% 
   rename(barcode = V1) %>% slice_sample(prop = percentage)
 
-feature_table <- read.delim(file = f.names[grepl("genes.tsv",f.names)], sep = "\t", header = FALSE) %>% 
+feature_table <- read.delim(file = f.names[grepl("genes|features",f.names)], sep = "\t", header = FALSE) %>% 
   mutate(row_idx = 1:nrow(.)) %>% 
   rename(feature = V1)
 
