@@ -29,9 +29,6 @@ if(length(grep(".zip", doc$name)) > 0) {
 # convert them to one matrix file
 percentage = as.double(ctx$op.value('percentage'))
 
-print(percentage)
-
-
 matrix_table <- read.delim(file = f.names[grepl("matrix.mtx",f.names)], sep = " ", header = FALSE, skip=2) %>%
   rename("feature_idx"= V1, "barcode_idx" =V2, "count" =V3)
 
@@ -44,7 +41,7 @@ feature_table <- read.delim(file = f.names[grepl("genes.tsv",f.names)], sep = "\
   rename(feature = V1)
 
 matrix_table <- matrix_table %>%
-  right_join(barcode_table, by= c("barcode_idx" = "row_idx"))
+  inner_join(barcode_table, by= c("barcode_idx" = "row_idx"))
 
 matrix_table <- matrix_table %>%
   left_join(feature_table, by= c("feature_idx" = "row_idx")) %>%
@@ -52,9 +49,6 @@ matrix_table <- matrix_table %>%
 
 matrix_table <- matrix_table %>%
   select(-ends_with("_idx"))
-
-print(nrow(matrix_table))
-stop("check the percentage")
 
 matrix_table %>%
   mutate_if(is.integer, as.double) %>%
