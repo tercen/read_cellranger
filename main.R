@@ -31,7 +31,6 @@ percentage = as.double(ctx$op.value('percentage'))
 
 print(percentage)
 
-stop("check the percentage")
 
 matrix_table <- read.delim(file = f.names[grepl("matrix.mtx",f.names)], sep = " ", header = FALSE, skip=2) %>%
   rename("feature_idx"= V1, "barcode_idx" =V2, "count" =V3)
@@ -53,6 +52,9 @@ matrix_table <- matrix_table %>%
 
 matrix_table <- matrix_table %>%
   select(-ends_with("_idx"))
+
+print(nrow(matrix_table))
+stop("check the percentage")
 
 matrix_table %>%
   mutate_if(is.integer, as.double) %>%
