@@ -19,6 +19,7 @@ if(length(grep(".zip", doc$name)) > 0) {
   tmpdir <- tempfile()
   unzip(filename, exdir = tmpdir)
   f.names <- list.files(tmpdir, full.names = TRUE, recursive = TRUE)
+  f.names <- f.names[grep("barcodes.tsv|features.tsv|matrix.mtx", f.names)]
 } else {
   f.names <- filename
 }
@@ -67,7 +68,7 @@ d_out <- lapply(folders, function(i) {
   matrix_table <- matrix_table %>%
     select(-ends_with("_idx")) %>%
     select(count, barcode, gene_name1, gene_name2) %>%
-    mutate(sample_id = basename(i))
+    mutate(sample_id = gsub(tmpdir, "", i))
   
   return(matrix_table)
 })
