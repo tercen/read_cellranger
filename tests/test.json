@@ -2,12 +2,15 @@
   "kind": "OperatorUnitTest",
   "name": "test",
   "namespace": "ds0",
-  "inputDataUri": "crabs-long.csv",
-  "outputDataUri": ["table1.csv","table2.csv","table3.csv"],
-  "columns": ["sex"],
-  "rows": ["variable"],
-  "colors": [],
-  "labels": [],
-  "yAxis": "measurement",
-  "xAxis": ""
+  "propertyValues": [
+    {
+      "kind": "PropertyValue",
+      "name": "proportion",
+      "value": 1
+    }
+  ],
+  "inputFileUris": ["Example Cell Ranger data.zip"],
+  "inputDataUri": "input.csv",
+  "outputDataUri": ["table1.csv", "table2.csv"],
+  "columns": ["documentId"]
 }
