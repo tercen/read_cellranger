@@ -34,7 +34,7 @@ d_out <- lapply(folders, function(i) {
   
   # convert them to one matrix file
   matrix_table <- read.delim(
-    file = f.names_sample[grepl("matrix.mtx.gz", f.names_sample)],
+    file = f.names_sample[grepl("matrix.mtx", f.names_sample)],
     sep = " ",
     header = FALSE,
     skip = 2

@@ -22,3 +22,12 @@ Output relations|.
 `gene_name2`    | gene ID (Symbol)
 `sample_id`     | sample ID (subfolder name)
 
+##### Details
+
+The operator expects a ZIP file containing output files from Cell Ranger
+(barcodes, features and matrix files). If multiple subfolders are found, 
+each of them will be read as a different sample (`sample_id` column).
+
+##### See also
+
+[scRNAseq_QC_operator](https://github.com/tercen/scRNAseq_QC_operator)

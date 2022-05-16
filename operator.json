@@ -8,8 +8,8 @@
   {
     "kind": "DoubleProperty",
     "name": "proportion",
-    "defaultValue": 0.1,
-    "description": "The percentage of data downsampling to be used before uploading"
+    "defaultValue": 1,
+    "description": "The proportion of cells to downsample (default is 1, no downsampling)."
   }
   ]
 }
