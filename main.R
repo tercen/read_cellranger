@@ -1,8 +1,9 @@
-library(tercen)
-library(tercenApi)
-library(dplyr)
-library(Seurat)
-
+suppressPackageStartupMessages({
+  library(tercen)
+  library(tercenApi)
+  library(dplyr)
+  library(Seurat)
+})
 ctx = tercenCtx()
 
 if (!any(ctx$cnames == "documentId")) stop("Column factor documentId is required.")
