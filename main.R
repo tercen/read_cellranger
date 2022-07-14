@@ -1,5 +1,7 @@
 library(tercen)
+library(tercenApi)
 library(dplyr)
+library(Seurat)
 
 ctx = tercenCtx()
 
@@ -14,70 +16,60 @@ filename = tempfile()
 writeBin(ctx$client$fileService$download(docId), filename)
 on.exit(unlink(filename))
 
-# unzip if archive
-if(length(grep(".zip", doc$name)) > 0) {
-  tmpdir <- tempfile()
-  unzip(filename, exdir = tmpdir)
-  f.names <- list.files(tmpdir, full.names = TRUE, recursive = TRUE)
-  f.names <- f.names[grep("barcodes.tsv|features.tsv|matrix.mtx", f.names)]
+tmpdir <- tempfile()
+unzip(filename, exdir = tmpdir)
+f.names <- list.files(tmpdir, full.names = TRUE, recursive = TRUE)
+f.names <- f.names[grep("barcodes.tsv|features.tsv|matrix.mtx", f.names)]
+
+samp_names <- gsub("/barcodes.tsv*|/features.tsv*|/matrix.mtx*|.gz", "", f.names) %>%
+  unique
+
+nms <- do.call(rbind, strsplit(samp_names, "/"))
+idx <- apply(nms, 2, function(x) length(unique(x)) > 1)
+if(sum(idx) == 1) {
+  sample_names <- nms[, idx]
 } else {
-  f.names <- filename
-}
+  sample_names <- apply(nms[, idx], 1, paste0, collapse="-")
+} 
 
-folders <- unique(dirname(f.names))
+names(samp_names) <- sample_names
+names(sample_names) <- samp_names
 
-proportion = ctx$op.value('proportion', as.double, 1)
-
-# check matrix, barcode and gene file
-d_out <- lapply(folders, function(i) {
-  f.names_sample <- f.names[grep(i, f.names)]
-  
-  # convert them to one matrix file
-  matrix_table <- read.delim(
-    file = f.names_sample[grepl("matrix.mtx", f.names_sample)],
-    sep = " ",
-    header = FALSE,
-    skip = 2
-  ) %>%
-    rename("feature_idx" = V1, "barcode_idx" = V2, "count" = V3)
-  
-  barcode_table <- read.delim(
-    file = f.names_sample[grepl("barcodes", f.names_sample)],
-    sep = "\t",
-    header = FALSE
-  ) %>% 
-    mutate(row_idx = 1:nrow(.)) %>% 
-    rename(barcode = V1) %>%
-    slice_sample(prop = proportion)
-  
-  if(nrow(barcode_table) == 0) stop("No cells in the dataset. Try to increase the proportion of sampled cells.")
-  
-  feature_table <- read.delim(
-    file = f.names_sample[grepl("genes|features", f.names_sample)],
-    sep = "\t",
-    header = FALSE
-  ) %>% 
-    mutate(row_idx = 1:nrow(.)) %>% 
-    rename(feature = V1)
-  
-  matrix_table <- matrix_table %>%
-    inner_join(barcode_table, by= c("barcode_idx" = "row_idx")) %>%
-    left_join(feature_table, by= c("feature_idx" = "row_idx")) %>%
-    rename(gene_name1 = feature, gene_name2 = V2)
-  
-  matrix_table <- matrix_table %>%
-    select(-ends_with("_idx")) %>%
-    select(count, barcode, gene_name1, gene_name2) %>%
-    mutate(sample_id = gsub(tmpdir, "", i))
-  
-  return(matrix_table)
+seurat_list <- lapply(samp_names, function(x){
+  raw <- Seurat::Read10X(x)
+  if(length(raw) > 1) {  # For output from CellRanger >= 3.0
+    raw = CreateSeuratObject(counts = raw$`Gene Expression`, project = sample_names[x])
+    # raw[['Protein']] = CreateAssayObject(counts = raw$`Antibody Capture`)
+  } else {
+    raw = CreateSeuratObject(counts = raw, project = sample_names[x])
+  }
+  raw
 })
 
-df_out <- do.call(rbind, d_out)
+names(seurat_list) <- sample_names
+mat_tmp <- do.call(rbind, lapply(seurat_list, dim)) 
+colnames(mat_tmp) <- c("n_genes", "n_cells")
+df_tmp <- mat_tmp %>%
+  as_tibble() %>%
+  mutate(.ci = 0, sample_name = sample_names)
 
-df_out %>%
-  mutate_if(is.integer, as.double) %>%
-  mutate(filename = basename(tmpdir)) %>%
-  mutate(.ci = 0) %>%
-  ctx$addNamespace() %>%
-  ctx$save()
+merged_seurat <- merge(
+  seurat_list[[1]],
+  y = seurat_list[-1],
+  add.cell.ids = sample_names,
+  project = "Project"
+)
+
+merged_seurat[["percent.mt"]] <- PercentageFeatureSet(
+  merged_seurat,
+  pattern = "^MT-"
+)
+
+## sparse matrix to data frame
+df_out <- as.data.frame(summary(GetAssayData(merged_seurat))) %>% 
+  as_tibble() %>%
+  rename(gene_id = i, cell_id = j, value = x) %>%
+  mutate(.ci = 0L) %>%
+  ctx$addNamespace()
+
+ctx$save(df_out)
