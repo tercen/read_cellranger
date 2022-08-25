@@ -73,23 +73,23 @@ spm <- GetAssayData(merged_seurat)
 df_out <- as.data.frame(summary(spm)) %>% 
   as_tibble() %>%
   rename(gene_id = i, cell_id = j, value = x) %>%
+  mutate(.gene_id = gene_id, .cell_id = cell_id) %>%
   mutate(.ci = 0L) %>%
   ctx$addNamespace()
 
 gene_names <- dimnames(spm)[[1]]
-df_gene <- tibble(gene_id = seq_along(gene_names), gene_names = gene_names)
+df_gene <- tibble(.gene_id = seq_along(gene_names), gene_names = gene_names)
 
 cell_names <- dimnames(spm)[[2]]
-df_cell <- tibble(cell_id = seq_along(cell_names), gene_names = cell_names)
+df_cell <- tibble(.cell_id = seq_along(cell_names), cell_names = cell_names)
 
 data_relation <- df_out %>% as_relation()
 gene_relation <- df_gene %>% ctx$addNamespace() %>% as_relation()
 cell_relation <- df_cell %>% ctx$addNamespace() %>% as_relation()
 
 rel_out <- data_relation %>%
-  left_join_relation(gene_relation, "ds3.gene_id", "ds3.gene_id") %>%
-  left_join_relation(cell_relation, "ds3.cell_id", "ds3.cell_id") %>%
+  left_join_relation(gene_relation, ".gene_id", ".gene_id") %>%
+  left_join_relation(cell_relation, ".cell_id", ".cell_id") %>%
   as_join_operator(list(), list())
 
 save_relation(rel_out, ctx)
-
