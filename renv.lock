@@ -920,10 +920,16 @@
     },
     "tercen": {
       "Package": "tercen",
-      "Version": "0.10.8",
-      "Source": "Repository",
-      "Repository": "TERCEN",
-      "Hash": "7676dd098faf9b2267411f8f129f5d8b"
+      "Version": "0.12.7",
+      "Source": "GitHub",
+      "Remotes": "tercen/tercenApi@0.12.7",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "tercen",
+      "RemoteUsername": "tercen",
+      "RemoteRef": "0.12.7",
+      "RemoteSha": "b6872f66ae4de70420c80c834e6e4da076fee2d3",
+      "Hash": "121941568a4e3aeba2b24cbab3f90a04"
     },
     "tercenApi": {
       "Package": "tercenApi",
@@ -964,6 +970,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "4a5081acfb7b81a572e4384a7aaf2af1"
+    },
+    "uuid": {
+      "Package": "uuid",
+      "Version": "1.1-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f1cb46c157d080b729159d407be83496"
     },
     "uwot": {
       "Package": "uwot",
