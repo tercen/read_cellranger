@@ -4,6 +4,7 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(Seurat)
 })
+
 ctx = tercenCtx()
 
 if (!any(ctx$cnames == "documentId")) stop("Column factor documentId is required.")
@@ -20,14 +21,16 @@ on.exit(unlink(filename))
 tmpdir <- tempfile()
 unzip(filename, exdir = tmpdir)
 f.names <- list.files(tmpdir, full.names = TRUE, recursive = TRUE)
-f.names <- f.names[grep("barcodes.tsv|features.tsv|matrix.mtx", f.names)]
+f.names <- f.names[grep("barcodes.tsv|features.tsv|genes.tsv|matrix.mtx", f.names)]
 
-samp_names <- gsub("/barcodes.tsv*|/features.tsv*|/matrix.mtx*|.gz", "", f.names) %>%
+samp_names <- gsub("/barcodes.tsv*|/features.tsv*|/genes.tsv*|/matrix.mtx*|.gz", "", f.names) %>%
   unique
 
 nms <- do.call(rbind, strsplit(samp_names, "/"))
 idx <- apply(nms, 2, function(x) length(unique(x)) > 1)
-if(sum(idx) == 1) {
+if(sum(idx) == 0) {
+  sample_names <- tail(c(nms), 1)
+} else if(sum(idx) == 1) {
   sample_names <- nms[, idx]
 } else {
   sample_names <- apply(nms[, idx], 1, paste0, collapse="-")
@@ -37,8 +40,8 @@ names(samp_names) <- sample_names
 names(sample_names) <- samp_names
 
 seurat_list <- lapply(samp_names, function(x){
-  raw <- Seurat::Read10X(x)
-  if(length(raw) > 1) {  # For output from CellRanger >= 3.0
+  raw <- Seurat::Read10X(data.dir = x)
+  if(!class(raw) == "dgCMatrix") {  # For output from CellRanger >= 3.0
     raw = CreateSeuratObject(counts = raw$`Gene Expression`, project = sample_names[x])
     # raw[['Protein']] = CreateAssayObject(counts = raw$`Antibody Capture`)
   } else {
@@ -54,23 +57,39 @@ df_tmp <- mat_tmp %>%
   as_tibble() %>%
   mutate(.ci = 0, sample_name = sample_names)
 
-merged_seurat <- merge(
-  seurat_list[[1]],
-  y = seurat_list[-1],
-  add.cell.ids = sample_names,
-  project = "Project"
-)
-
-merged_seurat[["percent.mt"]] <- PercentageFeatureSet(
-  merged_seurat,
-  pattern = "^MT-"
-)
+if(length(seurat_list) > 1) {
+  merged_seurat <- merge(
+    seurat_list[[1]],
+    y = seurat_list[-1],
+    add.cell.ids = sample_names,
+    project = "Project"
+  )
+} else {
+  merged_seurat <- seurat_list[[1]]
+}
 
 ## sparse matrix to data frame
-df_out <- as.data.frame(summary(GetAssayData(merged_seurat))) %>% 
+spm <- GetAssayData(merged_seurat)
+df_out <- as.data.frame(summary(spm)) %>% 
   as_tibble() %>%
   rename(gene_id = i, cell_id = j, value = x) %>%
   mutate(.ci = 0L) %>%
   ctx$addNamespace()
 
-ctx$save(df_out)
+gene_names <- dimnames(spm)[[1]]
+df_gene <- tibble(gene_id = seq_along(gene_names), gene_names = gene_names)
+
+cell_names <- dimnames(spm)[[2]]
+df_cell <- tibble(cell_id = seq_along(cell_names), gene_names = cell_names)
+
+data_relation <- df_out %>% as_relation()
+gene_relation <- df_gene %>% ctx$addNamespace() %>% as_relation()
+cell_relation <- df_cell %>% ctx$addNamespace() %>% as_relation()
+
+rel_out <- data_relation %>%
+  left_join_relation(gene_relation, "ds3.gene_id", "ds3.gene_id") %>%
+  left_join_relation(cell_relation, "ds3.cell_id", "ds3.cell_id") %>%
+  as_join_operator(list(), list())
+
+save_relation(rel_out, ctx)
+
