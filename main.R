@@ -70,26 +70,42 @@ if(length(seurat_list) > 1) {
 
 ## sparse matrix to data frame
 spm <- GetAssayData(merged_seurat)
-df_out <- as.data.frame(summary(spm)) %>% 
-  as_tibble() %>%
+tr <- try(slot(spm, "j"))
+if(inherits(tr, "try-error")) {
+  dff <- data.frame(
+    i = spm@i + 1L,  # m@i is 0-based, not 1-based like everything else in R
+    j = as.integer(rep(1:spm@Dim[2], diff(spm@p))),  # m@j is 0-based, not 1-based like everything else in R
+    x = spm@x
+  )
+} else {
+  dff <- as.data.frame(summary(spm)) %>% 
+    as_tibble() %>%
+    muatte(i = as.integer(i), j = as.integer(j))
+}
+
+df_out <- dff %>%
   rename(gene_id = i, cell_id = j, value = x) %>%
-  mutate(.gene_id = gene_id, .cell_id = cell_id) %>%
   mutate(.ci = 0L) %>%
   ctx$addNamespace()
 
 gene_names <- dimnames(spm)[[1]]
-df_gene <- tibble(.gene_id = seq_along(gene_names), gene_names = gene_names)
+df_gene <- tibble(gene_id = seq_along(gene_names), gene_names = gene_names) %>% 
+  ctx$addNamespace()
 
 cell_names <- dimnames(spm)[[2]]
-df_cell <- tibble(.cell_id = seq_along(cell_names), cell_names = cell_names)
+df_cell <- tibble(cell_id = seq_along(cell_names), cell_names = cell_names) %>% 
+  ctx$addNamespace()
 
 data_relation <- df_out %>% as_relation()
-gene_relation <- df_gene %>% ctx$addNamespace() %>% as_relation()
-cell_relation <- df_cell %>% ctx$addNamespace() %>% as_relation()
+gene_relation <- df_gene %>% as_relation()
+cell_relation <- df_cell %>% as_relation()
+
+gid <- colnames(df_gene)[grep("gene_id", colnames(df_gene))]
+cid <- colnames(df_cell)[grep("cell_id", colnames(df_cell))]
 
 rel_out <- data_relation %>%
-  left_join_relation(gene_relation, ".gene_id", ".gene_id") %>%
-  left_join_relation(cell_relation, ".cell_id", ".cell_id") %>%
+  left_join_relation(gene_relation, gid, gid) %>%
+  left_join_relation(cell_relation, cid, cid) %>%
   as_join_operator(list(), list())
 
 save_relation(rel_out, ctx)
