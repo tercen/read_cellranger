@@ -6,7 +6,7 @@
     {
       "kind": "PropertyValue",
       "name": "proportion",
-      "value": 1
+      "value": "1"
     }
   ],
   "inputFileUris": ["Example Cell Ranger data.zip"],
