@@ -55,7 +55,7 @@ mat_tmp <- do.call(rbind, lapply(seurat_list, dim))
 colnames(mat_tmp) <- c("n_genes", "n_cells")
 df_tmp <- mat_tmp %>%
   as_tibble() %>%
-  mutate(.ci = 0, sample_name = sample_names)
+  mutate(.ci = 0L, sample_name = sample_names)
 
 if(length(seurat_list) > 1) {
   merged_seurat <- merge(
@@ -96,9 +96,15 @@ cell_names <- dimnames(spm)[[2]]
 df_cell <- tibble(cell_id = seq_along(cell_names), cell_names = cell_names) %>% 
   ctx$addNamespace()
 
-data_relation <- df_out %>% as_relation()
-gene_relation <- df_gene %>% as_relation()
-cell_relation <- df_cell %>% as_relation()
+data_relation <- df_out %>% 
+  rename_with(~ gsub("__remove_ns__.", "", .x, fixed = TRUE)) %>%
+  as_relation()
+gene_relation <- df_gene %>% 
+  rename_with(~ gsub("__remove_ns__.", "", .x, fixed = TRUE)) %>%
+  as_relation()
+cell_relation <- df_cell %>% 
+  rename_with(~ gsub("__remove_ns__.", "", .x, fixed = TRUE)) %>%
+  as_relation()
 
 gid <- colnames(df_gene)[grep("gene_id", colnames(df_gene))]
 cid <- colnames(df_cell)[grep("cell_id", colnames(df_cell))]

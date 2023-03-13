@@ -1,0 +1,18 @@
+{
+  "kind": "OperatorUnitTest",
+  "name": "test_1",
+  "namespace": "ds1100",
+  "inputDataUri": "test_1_in.csv",
+  "outputDataUri": ["test_1_out_1.csv", "test_1_out_2.csv", "test_1_out_3.csv", "table2.csv"],
+  "columns": [
+    "documentId"
+  ],
+  "rows": [],
+  "colors": [],
+  "labels": [],
+  "yAxis": "",
+  "xAxis": "",
+  "generatedOn": "03/13/2023 04:09:39 PM 2023",
+  "version": "",
+  "inputFileUris": ["Example Cell Ranger data.zip"]
+}
