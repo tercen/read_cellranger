@@ -1,13 +1,1 @@
-.idea
 .Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-packrat/lib*/
-packrat/src
-workspace.R
-*.mtx
-*.csv
-*.tsva
-barcodes.tsv
-join.R
