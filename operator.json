@@ -1,6 +1,6 @@
 {
   "name": "Cell Ranger",
-  "description": "Import Cell Ranger output (scRNA-seq count data)",
+  "description": "Imports Cell Ranger output files (scRNA-seq count data).",
   "tags": [
     "import",
     "sc-RNA-seq"
