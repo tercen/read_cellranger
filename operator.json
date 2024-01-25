@@ -1,15 +1,22 @@
 {
   "name": "Cell Ranger",
   "description": "Import Cell Ranger output (scRNA-seq count data)",
-  "tags": ["import", "scRNA-seq"],
-  "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/read_cellranger_operator"],
+  "tags": [
+    "import",
+    "sc-RNA-seq"
+  ],
+  "authors": [
+    "tercen"
+  ],
+  "urls": [
+    "https://github.com/tercen/read_cellranger_operator"
+  ],
   "properties": [
-  {
-    "kind": "DoubleProperty",
-    "name": "proportion",
-    "defaultValue": 1,
-    "description": "The proportion of cells to downsample (default is 1, no downsampling)."
-  }
+    {
+      "kind": "DoubleProperty",
+      "name": "proportion",
+      "defaultValue": 1,
+      "description": "The proportion of cells to downsample (default is 1, no downsampling)."
+    }
   ]
 }
